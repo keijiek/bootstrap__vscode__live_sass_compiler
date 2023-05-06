@@ -1,10 +1,9 @@
 # Bootstrap5 + VSCode + LiveSassCompiler settings
 
-## ※ git clone 後の操作
-
-さらに編集するなら次を実行。
+## ※ git clone とその後の操作
 
 ```shell
+git clone git@github.com:keijiek/bootstrap__vscode__live_sass_compiler.git
 cd bootstrap__vscode__live_sass_compiler
 npm i
 ```
