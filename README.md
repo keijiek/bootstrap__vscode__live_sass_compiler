@@ -1,4 +1,4 @@
-# Bootstrap5 + VSCode + LiveSassCompiler settingsv
+# Bootstrap5 + VSCode with LiveSassCompiler, settings
 
 vite を使って開発環境を作ろうと思いましたが、その方法だと、ソースの html を編集する時に bootstrap の class 名を拾ってくれないので、先に scss だけコンパイルする方法を採用することにしました。
 
@@ -16,9 +16,9 @@ npm i
 
 ## ※ @import ではなく @use を使う場合
 
-bootstrap 公式の解説文には @import を使う方法が記されているものの、sacc 公式から廃止されると公言されて久しいので @use を使っておきたい。  
-そうする場合、次のように`with ()`を使うのが簡単で良さそう。  
-@import だと、パラメータ変更と import の順番に気を使うが、@use なら同時なので、より良い気がする。bootstrap 公式がこのように解説しない理由があるのかもしれないが。
+bootstrap 公式の解説文には @import を使う方法が記されているものの、sacc 公式から廃止されると公言されて久しいので @use を使っておきたいところ。  
+そうする場合、次のように`with ()`を使うのが簡単で良さそうです。  
+@import だと、パラメータ変更と import の順番に気を使うけど、@use なら同時なので、こっちの方が良い気がします。とはいえ、bootstrap 公式がこのように解説しない重大な理由があるのかも…
 
 ```shell
 # assets/scss/_bootstrap_custom.scss
@@ -32,8 +32,8 @@ bootstrap 公式の解説文には @import を使う方法が記されている�
 
 ## 1. 前提
 
-1. node を導入しておく。特定バージョンを直にインストールするのではなく、nvm や volta 等のバージョン管理ツールを使うことをおすすめします。
-1. VSCode に、拡張 LiveSassCompiler を導入。WSL や サーバーを使っているなら、そのリモート接続先に導入。
+1. node を導入しておく。特定バージョンを直にインストールするのではなく、nvm や volta をはじめとした、何らかのバージョン管理ツールを使うことを強くおすすめします。
+1. VSCode に、拡張 LiveSassCompiler を導入。WSL や サーバーを使っているなら、そのリモート接続先に導入します。
 
 ---
 
@@ -93,7 +93,9 @@ npm i -D bootstrap jquery
 
 ```shell
 # ディレクトリ作成
-mkdir {./assets,./assets/scss,./assets/css,./assets/ts,./assets/js,./assets/js,./assets/img}
+mkdir {./assets,./assets/scss,./assets/css,./assets/ts,./assets/js,./assets/img}
+# 別の書き方
+mkdir ./assets && mkdir ./assets/{scss,css,ts,js,img}
 
 # bootstrap の js ファイルをコピー。bootstrap 導入方法によりコピー元のパスが異なるので注意)
 # この時、bootstrap.bundle.min.js は、popper.js が含まれたもの。bootstrap.min.js は含まれず、別途必要。いずれも jquery は別途必要。
@@ -102,13 +104,20 @@ cp ./node_modules/jquery/dist/jquery.min.js ./assets/js
 
 # scss ファイルを作成。bootstrap 導入方法により、@import のパスが異なるので注意。
 echo -e "@import \"./bootstrap\";" > ./assets/scss/styles.scss
-echo -e "@import \"../../node_modules/bootstrap/scss/bootstrap\";" > ./assets/scss/_bootstrap.scss
+echo -e "@import \"../../node_modules/bootstrap/scss/bootstrap\";" > ./assets/scss/_bootstrap_custom.scss
+
+# use を使う場合
+echo -e "@use  \"./bootstrap_custom\" as bootstrap_custom;" > ./assets/scss/styles.scss
+echo -e "@use \"../../node_modules/bootstrap/scss/bootstrap\" with (\n  \$primary: rgba(0, 128, 0, 1),\n  \$secondary: rgba(0, 0, 255, 1)\n);" > ./assets/scss/_bootstrap_custom.scss
 ```
 
 echo の引数:
 - -e : この後の文字列でエスケープを有効にする。
+  - `\"` : 単なる文字列としてのダブルコート
+  - `\n` : 改行コード
+  - `\$` : エスケープして変数扱いを防いでいる
 
-※ mkdir の{}内はスペースを空けないこと。
+※ mkdir の{}内はスペースを空けないこと。  
 
 ---
 
@@ -131,7 +140,7 @@ echo の引数:
 
 ```scss
 @use  "./bootstrap_custom" as bootstrap_custom;
-// 名前空間はなんでもいい。
+// 名前空間はなんでもいいはず。as * とかでも。
 ```
 
 ### /assets/scss/_bootstrap_custom.scss
@@ -183,7 +192,6 @@ echo の引数:
     ],
     "liveSassCompile.settings.generateMap": false,
   }
-  // (略)
 }
 
 ```
@@ -213,4 +221,3 @@ echo の引数:
 map ファイルを出力するか？ true = する
 
 ---
-
