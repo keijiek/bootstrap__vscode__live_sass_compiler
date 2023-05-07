@@ -1,11 +1,31 @@
-# Bootstrap5 + VSCode + LiveSassCompiler settings
+# Bootstrap5 + VSCode + LiveSassCompiler settingsv
+
+vite を使って開発環境を作ろうと思いましたが、その方法だと、ソースの html を編集する時に bootstrap の class 名を拾ってくれないので、先に scss だけコンパイルする方法を採用することにしました。
 
 ## ※ git clone とその後の操作
+
+忘れずに node modules を入れてください。
 
 ```shell
 git clone git@github.com:keijiek/bootstrap__vscode__live_sass_compiler.git
 cd bootstrap__vscode__live_sass_compiler
 npm i
+```
+
+---
+
+## ※ @import ではなく @use を使う場合
+
+bootstrap 公式の解説文には @import を使う方法が記されているものの、sacc 公式から廃止されると公言されて久しいので @use を使っておきたい。  
+そうする場合、次のように`with ()`を使うのが簡単で良さそう。  
+@import だと、パラメータ変更と import の順番に気を使うが、@use なら同時なので、より良い気がする。bootstrap 公式がこのように解説しない理由があるのかもしれないが。
+
+```shell
+# assets/scss/_bootstrap_custom.scss
+@use "../../node_modules/bootstrap/scss/bootstrap" with (
+  $primary: rgba(0, 128, 0, 1),
+  $secondary: rgba(0, 0, 255, 1)
+);
 ```
 
 ---
@@ -26,14 +46,14 @@ tree -F --dirsfirst -a -I "\node_modules|\.git|\.vscode|\.DS_Store"
 ./
 ├── assets/
 │   ├── css/
-│   │   ├── styles.css
-│   │   └── styles.css.map
+│   │   └── styles.min.css : (コンパイル後のcss。html から読み込む)
 │   ├── img/
 │   ├── js/
-│   │   └── bootstrap.bundle.min.js
+│   │   ├── bootstrap.bundle.min.js : (bootstrap の js)
+│   │   └── jquery.min.js : (bootstrap 使用の前提となる jquery。WordPress を使うなら不要。)
 │   ├── scss/
-│   │   ├── _bootstrap.scss
-│   │   └── styles.scss
+│   │   ├── _bootstrap_custom.scss : (bootstrap のパラメータ変更はここに書く。)
+│   │   └── styles.scss : (scss のエントリーポイント。)
 │   └── ts/
 ├── .gitignore
 ├── README.md
@@ -51,18 +71,21 @@ tree -F --dirsfirst -a -I "\node_modules|\.git|\.vscode|\.DS_Store"
 
 ## 3. 手順
 
-### 3.1. bootstrap の導入
+### 3.1. bootstrap, jquery の導入
 
 #### 3.1.a. npm を使う
 
+- ただし、WordPress を使う予定なら JQuery は不要。デフォルトで読み込んでいるらしい。
+
 ```shell
 npm init -y
-npm i -D bootstrap
+npm i -D bootstrap jquery
 ```
 
 #### 3.1.b. 公式からダウンロードする
 
-<https://getbootstrap.jp/> の Download から、ソースファイルをダウンロードし、プロジェクト内に配置。
+- <https://getbootstrap.jp/> の Download から、bootstrap ソースファイルをダウンロードし、bootstrap.bundle.min.js だけプロジェクト内に配置。
+- <https://jquery.com/> の Download から、jquery の compressed な production バージョンをダウンロードし、jquery.min.js だけをプロジェクト内に配置。
 
 ---
 
@@ -70,11 +93,12 @@ npm i -D bootstrap
 
 ```shell
 # ディレクトリ作成
-mkdir {./assets,./assets/scss,./assets/css,./assets/ts,./assets/js,./assets/img}
+mkdir {./assets,./assets/scss,./assets/css,./assets/ts,./assets/js,./assets/js,./assets/img}
 
 # bootstrap の js ファイルをコピー。bootstrap 導入方法によりコピー元のパスが異なるので注意)
-# この時、bootstrap.bundle.min.js は、popper.js が含まれたもの。bootstrap.min.js は含まれないもの。いずれも jquery は別途必要。
+# この時、bootstrap.bundle.min.js は、popper.js が含まれたもの。bootstrap.min.js は含まれず、別途必要。いずれも jquery は別途必要。
 cp ./node_modules/bootstrap/dist/js/bootstrap.bundle.min.js ./assets/js/
+cp ./node_modules/jquery/dist/jquery.min.js ./assets/js
 
 # scss ファイルを作成。bootstrap 導入方法により、@import のパスが異なるので注意。
 echo -e "@import \"./bootstrap\";" > ./assets/scss/styles.scss
@@ -90,22 +114,45 @@ echo の引数:
 
 ## ファイルの中身
 
+- `/assets/scss/styles.scss` : scss のエントリーポイント。他に必要なスタイルがあれば、書き足したりインポートしたりする。
+- `/assets/scss/_bootstrap_custom.scss` : bootstrap のカスタマイズを行うファイル。
+- `/*.code-workspace` : VSCode の拡張の設定もここに書く。そうする事で「ワークスペース」を変更を限定できる。「ユーザー」や「リモート」の設定を変えてしまわないよう注意。
+
 ### /assets/scss/styles.scss
 
-- _bootstrap.scss をインポートする。
+- import の場合
 
 ```scss
 @import "./bootstrap_custom";
-// この後に書きたい scss 文を書いてもよい。
+// この後に、自作のスタイルを書き足したり、他のscssをインポートしたりする。
 ```
 
-### /assets/scss/_bootstrap.scss
-
-- bootstrap のカスタマイズはこのファイルで行う。
+- use の場合
 
 ```scss
+@use  "./bootstrap_custom" as bootstrap_custom;
+// 名前空間はなんでもいい。
+```
+
+### /assets/scss/_bootstrap_custom.scss
+
+- import の場合
+
+```scss
+// 変更を加えたいパラメータを持つインポート対象を import するより先に、パラメータと変更後の値を定義しておく。
+  $primary: rgba(0, 128, 0, 1);
+  $secondary: rgba(0, 0, 255, 1);
 @import "../../node_modules/bootstrap/scss/bootstrap";
-// これ以降、かつ次の @import を記述する直前までに、カスタマイズ用の記述をしなければならない。
+```
+
+- use の場合
+
+```scss
+// 変更を加えたいパラメータを持つインポート対象に、変更を with で渡す。
+@use "../../node_modules/bootstrap/scss/bootstrap" with (
+  $primary: rgba(0, 128, 0, 1),
+  $secondary: rgba(0, 0, 255, 1)
+);
 ```
 
 ### *.code-workspace に liveSassCompire の設定を記述
@@ -115,36 +162,55 @@ echo の引数:
   // root > settings 内に記述
   "settings": {
     // (略)
-    // autoprefixer がカバーするブラウザの範囲を定義。この設定が無い場合 autoprefixer は機能しない。
     "liveSassCompile.settings.autoprefix": [
-      "> 1%",
+      "> 0.5%",
       "last 2 versions"
     ],
-    // 無視するディレクトリの一覧。上2つは規定値。.git/** を足した。
     "liveSassCompile.settings.excludeList": [
       "/**/node_modules/**",
       "/.vscode/**",
       "/.git/**"
     ],
-    /**
-     * 設定の内容：
-     * format : expanded / compressed
-     * extensionName : .css / .min.css
-     * savePath : css の出力先パス。ディレクトリが無いなら作る。パスの起点はプロジェクトルート。
-     */
     "liveSassCompile.settings.formats": [
       {
         "format": "expanded",
-        "extensionName": ".css",
+        "extensionName": ".min.css",
         "savePath": "/assets/css"
       }
     ],
-    // 参照すべきscssファイルを直接、指定できる。また、配列内で複数を指定できる。
     "liveSassCompile.settings.includeItems": [
       "/assets/scss/styles.scss"
-    ]
+    ],
+    "liveSassCompile.settings.generateMap": false,
   }
   // (略)
 }
 
 ```
+### liveSassCompile.settings の設定と値
+
+#### autoprefix
+
+- autoprefixer がカバーするブラウザの範囲を定義。この設定が無い場合 autoprefixer は機能しない。
+- 設定の値は、<https://browsersl.ist/> と同じ。
+
+#### excludeList
+
+- 無視するディレクトリを配列状に書く。`"/**/node_modules/**"`と`"/.vscode/**",` は規定値。
+
+#### formats
+
+- `format` : 出力する css のミニファイ。`expanded`=しない / `compressed`=する。
+- `extensionName` : 出力する css ファイルの拡張子。参照元(html側のlink)を書き換えないことを思えば、`.css` または `.min.css `になると思う。
+- `savePath` : css の出力先ディレクトリのパス。ディレクトリが無いなら自動生成。パスの起点はプロジェクトルート。
+
+#### includeItems
+
+- ピンポイントでコンパイルしたい scss ファイルを指定する。複数ある場合は配列の要素として追加していく。
+
+#### generateMap
+
+map ファイルを出力するか？ true = する
+
+---
+

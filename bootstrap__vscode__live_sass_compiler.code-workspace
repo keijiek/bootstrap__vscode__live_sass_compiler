@@ -8,7 +8,7 @@
     "editor.tabSize": 2,
     "editor.insertSpaces": false,
     "liveSassCompile.settings.autoprefix": [
-      "> 1%",
+      "> 0.5%",
       "last 2 versions"
     ],
     "liveSassCompile.settings.excludeList": [
@@ -18,13 +18,14 @@
     ],
     "liveSassCompile.settings.formats": [
       {
-        "format": "compressed",
-        "extensionName": ".css",
+        "format": "expanded",
+        "extensionName": ".min.css",
         "savePath": "/assets/css",
       }
     ],
     "liveSassCompile.settings.includeItems": [
       "/assets/scss/styles.scss"
-    ]
+    ],
+    "liveSassCompile.settings.generateMap": false,
   }
 }
